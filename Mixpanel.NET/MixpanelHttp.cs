@@ -1,6 +1,7 @@
 using System.IO;
 using System.Net;
 using System.Text;
+using System;
 
 namespace Mixpanel.NET
 {
@@ -9,22 +10,29 @@ namespace Mixpanel.NET
   /// no way to do that with the WebRequest class cleanly.
   /// </summary>
   public interface IMixpanelHttp {
-    string Get(string uri, string query);      
-    string Post(string uri, string body);      
+      string Get(string uri, string querycallback, Action<TrackResult> callback = null);
+      string Post(string uri, string body, Action<TrackResult> callback = null);      
   }
 
-  public class MixpanelHttp : IMixpanelHttp {
-    public string Get(string uri, string query) {
+  public class MixpanelHttp : IMixpanelHttp 
+  {
+      public string Get(string uri, string query, Action<TrackResult> callback = null) 
+    {
       var request = WebRequest.Create(uri + "?" + query);
       var response = request.GetResponse();
       var responseStream = response.GetResponseStream();
-      return responseStream == null 
+      var result =  responseStream == null 
         ? null
         : new StreamReader(responseStream).ReadToEnd();
+
+      if (callback != null)
+          callback(new TrackResult(result));
+      return result;
     }
 
 
-    public string Post(string uri, string body) {
+      public string Post(string uri, string body, Action<TrackResult> callback = null)
+      {
       var request = WebRequest.Create(uri);
       request.Method = "POST";
       request.ContentType = "application/x-www-form-urlencoded";
@@ -32,9 +40,14 @@ namespace Mixpanel.NET
       request.GetRequestStream().Write(bodyBytes, 0, bodyBytes.Length);
       var response = request.GetResponse();
       var responseStream = response.GetResponseStream();
-      return responseStream == null 
+
+      var result =  responseStream == null 
         ? null
         : new StreamReader(responseStream).ReadToEnd();
+
+      if (callback != null)
+          callback(new TrackResult(result));
+      return result;
     }
   }
 }

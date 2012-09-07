@@ -9,15 +9,15 @@ namespace Mixpanel.NET.Specs.Unit {
   public class tracker_context {
     Establish that = () => {
       FakeHttp = A.Fake<IMixpanelHttp>();
-      A.CallTo(() => FakeHttp.Post(A<string>.That.Matches(x => ValidUriCheck(x)), A<string>.Ignored))
+      A.CallTo(() => FakeHttp.Post(A<string>.That.Matches(x => ValidUriCheck(x)), A<string>.Ignored, null))
         .Invokes(x => CatchSentParameterData(x.GetArgument<string>(0), x.GetArgument<string>(1)))
         .Returns("1");
-      A.CallTo(() => FakeHttp.Post(A<string>.That.Matches(x => !ValidUriCheck(x)), A<string>.Ignored))
+      A.CallTo(() => FakeHttp.Post(A<string>.That.Matches(x => !ValidUriCheck(x)), A<string>.Ignored, null))
         .Returns("0");
-      A.CallTo(() => FakeHttp.Get(A<string>.That.Matches(x => ValidUriCheck(x)), A<string>.Ignored))
+      A.CallTo(() => FakeHttp.Get(A<string>.That.Matches(x => ValidUriCheck(x)), A<string>.Ignored, null))
         .Invokes(x => CatchSentParameterData(x.GetArgument<string>(0), x.GetArgument<string>(1)))
         .Returns("1");
-      A.CallTo(() => FakeHttp.Get(A<string>.That.Matches(x => !ValidUriCheck(x)), A<string>.Ignored))
+      A.CallTo(() => FakeHttp.Get(A<string>.That.Matches(x => !ValidUriCheck(x)), A<string>.Ignored, null))
         .Returns("0");
       Token = "Your mixpanel token";
       Proxy = null;
@@ -141,7 +141,7 @@ namespace Mixpanel.NET.Specs.Unit {
     Because of = () => Result = MixpanelTracker.Track(_event);
 
     Behaves_like<a_mixpanel_event_sent> a_mixpanel_event_was_sent;
-    It should_send_via_the_get_method = () => A.CallTo(() => FakeHttp.Get(A<string>.Ignored, A<string>.Ignored))
+    It should_send_via_the_get_method = () => A.CallTo(() => FakeHttp.Get(A<string>.Ignored, A<string>.Ignored, null))
       .MustHaveHappened();
 
     static MyEvent _event;

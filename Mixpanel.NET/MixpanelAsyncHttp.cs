@@ -9,14 +9,14 @@ namespace Mixpanel.NET
 {
     public class MixpanelAsyncHttp : IMixpanelHttp
     {
-        public string Get(string uri, string query)
+        public string Get(string uri, string query, Action<TrackResult> callback)
         {
             var request = WebRequest.Create(uri + "?" + query);
-            RequestAsync(request, new byte[0]);
+            RequestAsync(request, new byte[0], callback);
             return "1";
         }
 
-        public string Post(string uri, string body)
+        public string Post(string uri, string body, Action<TrackResult> callback)
         {
             var request = WebRequest.Create(uri);
             request.Method = "POST";
@@ -24,12 +24,12 @@ namespace Mixpanel.NET
 
             var bodyBytes = Encoding.UTF8.GetBytes(body);
 
-            RequestAsync(request, bodyBytes);
+            RequestAsync(request, bodyBytes, callback);
 
             return "1";
         }
 
-        private static void RequestAsync(WebRequest request, byte[] bodyBytes)
+        private static void RequestAsync(WebRequest request, byte[] bodyBytes, Action<TrackResult> callback)
         {
             request.BeginGetRequestStream((r1) =>
             {
@@ -51,18 +51,34 @@ namespace Mixpanel.NET
                                     {
                                         using (var reader = new StreamReader(response.GetResponseStream()))
                                         {
-                                            var result = reader.ReadToEnd();
+                                            if (callback != null)
+                                                callback(new TrackResult(reader.ReadToEnd()));
                                         }
                                     }
                                 }
-                                catch { }
+                                catch (Exception ex)
+                                {
+                                    HandleError(callback, ex);
+                                }
                             }, null);
                         }
-                        catch { }
+                        catch (Exception ex)
+                        {
+                            HandleError(callback, ex);
+                        }
                     }, null);
                 }
-                catch { }
+                catch(Exception ex)
+                {
+                    HandleError(callback, ex);
+                }
             }, null);
+        }
+
+        private static void HandleError(Action<TrackResult> callback, Exception ex)
+        {
+            if (callback != null)
+                callback(new TrackResult(ex));
         }
     }
 
