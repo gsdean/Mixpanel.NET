@@ -25,7 +25,7 @@ namespace Mixpanel.NET.Events
             _options = options ?? new TrackerOptions();
         }
 
-        public bool Track(string @event, IDictionary<string, object> properties)
+        public bool Track(string @event, IDictionary<string, object> properties, Action<TrackResult> callback = null)
         {
             var propertyBag = new Dictionary<string, object>(properties);
             // Standardize token and time values for Mixpanel
@@ -53,20 +53,20 @@ namespace Mixpanel.NET.Events
             if (_options.Test) values += "&test=1";
 
             var contents = _options.UseGet
-              ? http.Get(Resources.Track(_options.ProxyUrl), values)
-              : http.Post(Resources.Track(_options.ProxyUrl), values);
+              ? http.Get(Resources.Track(_options.ProxyUrl), values, callback)
+              : http.Post(Resources.Track(_options.ProxyUrl), values, callback);
 
             return contents == "1";
         }
 
-        public bool Track(MixpanelEvent @event)
+        public bool Track(MixpanelEvent @event, Action<TrackResult> callback = null)
         {
-            return Track(@event.Event, @event.Properties);
+            return Track(@event.Event, @event.Properties, callback);
         }
 
-        public bool Track<T>(T @event)
+        public bool Track<T>(T @event, Action<TrackResult> callback = null)
         {
-            return Track(@event.ToMixpanelEvent(_options.LiteralSerialization));
+            return Track(@event.ToMixpanelEvent(_options.LiteralSerialization), callback);
         }
     }
 }
